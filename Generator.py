@@ -106,8 +106,11 @@ def gen_records(num_records):
         ws = fake.local_latlng(country_code='US')[2][:20]  # PC Workstation names
         boolpaper = random.getrandbits(1)
         batchtype = random.choice(['Paper', 'Email'])
+        op = operators[random.randrange(len(operators))]
+        cus = customers[random.randrange(len(customers))]
         for x in range(batch_size):
-
+            isPO = random.getrandbits(1)
+            supp = suppliers[random.randrange(len(suppliers))]
             record = {
                 "batchid": batch_num,
                 "documentid": x,
@@ -116,8 +119,31 @@ def gen_records(num_records):
                 "releaseTime": batch_release.strftime('%Y-%m-%d %H:%M:%S'),
                 "isPaper": boolpaper,
                 "batchType": batchtype,
-
+                "operatorID": op["id"],
+                "operatorFName": op["fName"],
+                "operatorLName": op["lName"],
+                "customerID": cus["cid"],
+                "customerName": cus["cName"],
+                "customerAddr": cus["cAddress"],
+                "InvoiceNumber": "INV"+str(random.randint(0,9999999)),
+                "InvoiceDate": fake.date(),
+                "InvoiceAmount": str(random.randrange(0, 100000))+"."+str(random.randint(0, 99)).zfill(2),
+                "SupplierID": supp["sid"],
+                "SupplierName": supp["sName"],
+                "SupplierAddress": supp["sAddress"],
             }
+            comp = companies[random.randrange(len(companies))]
+            while cus["cid"] != comp["customer"]:
+                comp = companies[random.randrange(len(companies))]
+
+            record["CompanyID"] = comp["compId"]
+            record["CompanyName"] = comp["compName"]
+            record["CompanyAddress"] = comp["compAddress"]
+
+            if isPO:
+                record["PONumber"] = "PO-"+str(random.randint(0,999999)).zfill(6)
+            else:
+                record["PONumber"] = "null"
 
             if records_left > 0:
                 Records.append(record)
@@ -133,7 +159,7 @@ def gen_records(num_records):
 def write_records(rec, file_name):
     fieldnames = rec[0].keys()
     with open(file_name, 'w') as csvfile:
-        dict_writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
+        dict_writer = csv.DictWriter(csvfile, fieldnames=fieldnames, delimiter="|")
         dict_writer.writeheader()
         dict_writer.writerows(rec)
 
